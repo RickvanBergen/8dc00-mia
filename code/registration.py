@@ -41,8 +41,8 @@ def rotate(phi):
 
     #------------------------------------------------------------------#
     # TODO: Implement transformation matrix for rotation.
+    T = np.array([[np.cos(phi),-np.sin(phi)],[np.sin(phi),np.cos(phi)]])
     #------------------------------------------------------------------#
-
     return T
 
 
@@ -56,6 +56,7 @@ def shear(cx, cy):
 
     #------------------------------------------------------------------#
     # TODO: Implement transformation matrix for shear.
+    T=np.array([[1,cx],[cy,1]])
     #------------------------------------------------------------------#
 
     return T
@@ -77,7 +78,8 @@ def reflect(rx, ry):
     #------------------------------------------------------------------#
     # TODO: Implement transformation matrix for reflection
     #------------------------------------------------------------------#
-
+    else:
+        T=np.array([[rx,0],[0,ry]])
     return T
 
 
@@ -97,7 +99,6 @@ def image_transform(I, Th,  output_shape=None):
     # convert to double and remember the original input type
 
     input_type = type(I);
-
     # default output size is same as input
     if output_shape is None:
         output_shape = I.shape
@@ -113,8 +114,10 @@ def image_transform(I, Th,  output_shape=None):
     Xh = util.c2h(X)
 
     #------------------------------------------------------------------#
-    # TODO: Perform inverse coordinates mapping.
+    # Perform inverse coordinates mapping.
     #------------------------------------------------------------------#
+    Thinv = np.linalg.inv(Th)
+    Xt = Thinv.dot(Xh)
 
     It = ndimage.map_coordinates(I, [Xt[1,:], Xt[0,:]], order=1, mode='constant').reshape(I.shape)
 
@@ -131,7 +134,12 @@ def ls_solve(A, b):
     # E - squared error for the optimal solution
 
     #------------------------------------------------------------------#
-    # TODO: Implement the least-squares solution for w.
+    # Implement the least-squares solution for w.
+
+    b=b.reshape(b.size,1)
+    At=A.transpose()
+    w=np.linalg.inv(At.dot(A)).dot(At.dot(b))
+
     #------------------------------------------------------------------#
 
     # compute the error
@@ -151,8 +159,15 @@ def ls_affine(X, Xm):
     A = np.transpose(Xm)
 
     #------------------------------------------------------------------#
-    # TODO: Implement least-squares fitting of an affine transformation.
+    # Implement least-squares fitting of an affine transformation.
     # Use the ls_solve() function that you have previously implemented.
+    B = X.transpose()
+
+    T1,E1 = ls_solve(A,B[:,0])
+    T2,E2= ls_solve(A,B[:,1])
+    Tlast=np.append(np.zeros(len(T1)-1),1)
+    T=np.concatenate((T1,T2,Tlast.reshape(len(T1),1)),axis=1).transpose()
+
     #------------------------------------------------------------------#
 
     return T
@@ -180,8 +195,11 @@ def correlation(I, J):
     v = v - v.mean(keepdims=True)
 
     #------------------------------------------------------------------#
-    # TODO: Implement the computation of the normalized cross-correlation.
+    # Implement the computation of the normalized cross-correlation.
     # This can be done with a single line of code, but you can use for-loops instead.
+
+    CC=u.transpose().dot(v)/(np.sqrt(u.transpose().dot(u)).dot(np.sqrt(v.transpose().dot(v))))
+
     #------------------------------------------------------------------#
 
     return CC
@@ -228,10 +246,13 @@ def joint_histogram(I, J, num_bins=16, minmax_range=None):
         p[I[k], J[k]] = p[I[k], J[k]] + 1
 
     #------------------------------------------------------------------#
-    # TODO: At this point, p contains the counts of cooccuring
+    # At this point, p contains the counts of cooccuring
     # intensities in the two images. You need to implement one final
     # step to make p take the form of a probability mass function
     # (p.m.f.).
+
+    p=p/n;
+
     #------------------------------------------------------------------#
 
     return p
@@ -258,11 +279,14 @@ def mutual_information(p):
     p_J = p_J.reshape(1, -1)
 
     #------------------------------------------------------------------#
-    # TODO: Implement the computation of the mutual information from p,
+    # Implement the computation of the mutual information from p,
     # p_I and p_J. This can be done with a single line of code, but you
     # can use a for-loop instead.
     # HINT: p_I is a column-vector and p_J is a row-vector so their
     # product is a matrix. You can also use the sum() function here.
+
+    MI = np.sum(np.sum((p*(np.log(p/(p_I.dot(p_J)))))))
+
     #------------------------------------------------------------------#
 
     return MI
@@ -292,6 +316,15 @@ def mutual_information_e(p):
     #------------------------------------------------------------------#
     # TODO: Implement the computation of the mutual information via
     # computation of entropy.
+
+
+    HI = -p_I.transpose().dot(np.log(p_I))
+    HJ = -p_J.dot(np.log(p_J.transpose()))
+    HIJ = -sum(sum(p*(np.log(p))))
+    print('HI',HI,'HJ',HJ,'HIJ',HIJ)
+    MI = HI+HJ-HIJ
+    print('MI',MI)
+
     #------------------------------------------------------------------#
 
     return MI
@@ -310,11 +343,13 @@ def ngradient(fun, x, h=1e-3):
     # g - vector of partial derivatives (gradient) of fun
 
     #------------------------------------------------------------------#
-    # TODO: Implement the  computation of the partial derivatives of
+    # Implement the  computation of the partial derivatives of
     # the function at x with numerical differentiation.
     # g[k] should store the partial derivative w.r.t. the k-th parameter
+    g=np.zeros(x.size);
+    for i in range(len(x)):
+        g[i]= (fun(x[i].item()+h/2)-fun(x[i].item()-h/2))/h
     #------------------------------------------------------------------#
-
     return g
 
 
@@ -377,6 +412,8 @@ def affine_corr(I, Im, x):
 
     #------------------------------------------------------------------#
     # TODO: Implement the missing functionality
+    T = rotate(x[0])
+
     #------------------------------------------------------------------#
 
     return C, Im_t, Th
