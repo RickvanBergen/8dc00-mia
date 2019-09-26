@@ -46,9 +46,34 @@ def combining_transforms():
     X = util.test_object(1)
 
     #------------------------------------------------------------------#
-    # TODO: Experiment with combining transformation matrices.
-    #------------------------------------------------------------------#
+    # Experiment with combining transformation matrices.
+    X1_1=reg.rotate(np.pi/4).dot(reg.reflect(-1,1).dot(X))
+    X1_2=reg.reflect(-1,1).dot(reg.rotate(np.pi/4).dot(X))
+    X2_1=reg.shear(0.6,0.3).dot(reg.reflect(-1,-1).dot(X))
+    X2_2=reg.shear(0.6,0.3).dot(reg.reflect(-1,1).dot(X))
+    X3_1=reg.reflect(-1,1).dot(reg.shear(0.6,0.3).dot(X))
+    X3_2=reg.shear(0.6,0.3).dot(reg.reflect(-1,1).dot(X))
 
+    fig = plt.figure(figsize=(12,5))
+    ax1 = fig.add_subplot(141, xlim=(-4,4), ylim=(-4,4))
+    ax2 = fig.add_subplot(142, xlim=(-4,4), ylim=(-4,4))
+    ax3 = fig.add_subplot(143, xlim=(-4,4), ylim=(-4,4))
+    ax4 = fig.add_subplot(144, xlim=(-4,4), ylim=(-4,4))
+    
+    util.plot_object(ax1,X)
+    util.plot_object(ax2,X1_1)
+    util.plot_object(ax2,X1_2)
+    util.plot_object(ax3,X2_1)
+    util.plot_object(ax3,X2_2)
+    util.plot_object(ax4,X3_1)
+    util.plot_object(ax4,X3_2)
+    
+    ax1.grid()
+    ax2.grid()
+    ax3.grid()
+    ax4.grid()
+    #------------------------------------------------------------------#
+    
 
 def t2h_test():
 
@@ -76,11 +101,19 @@ def arbitrary_rotation():
 
     X = util.test_object(1)
     Xh = util.c2h(X)
-
+    
     #------------------------------------------------------------------#
-    # TODO: TODO: Perform rotation of the test shape around the first vertex
+    # Perform rotation of the test shape around the first vertex
+    
+    t = -X[:,0]
+    Trot = reg.rotate(np.pi/4)    
+    Throt = util.t2h(Trot,np.zeros([1,np.size(Trot,axis=1)]))
+    th = util.t2h(reg.identity(),t)
+    thin = np.linalg.inv(th)
+    T=thin.dot(Throt.dot(th))
+    
     #------------------------------------------------------------------#
-
+    
     X_rot = T.dot(Xh)
 
     fig = plt.figure(figsize=(5,5))
@@ -133,11 +166,13 @@ def image_transform_test():
 
 
 def ls_solve_test():
-
+    A=np.array([[3,4],[5,6],[7,8],[17,10]])
+    B=np.array([[1],[2],[3],[4]])
     #------------------------------------------------------------------#
-    # TODO: Test your implementation of the ls_solve definition
+    # Test your implementation of the ls_solve definition
     #------------------------------------------------------------------#
 
+    return reg.ls_solve(A,B)
 
 def ls_affine_test():
 
@@ -182,6 +217,7 @@ def ls_affine_test():
 def correlation_test():
 
     I = plt.imread('../data/cameraman.tif')
+
     Th = util.t2h(reg.identity(), np.array([10,20]))
     J, _ = reg.image_transform(I, Th)
 
@@ -190,7 +226,13 @@ def correlation_test():
     assert abs(C1 - 1) < 10e-10, "Correlation function is incorrectly implemented (self correlation test)"
 
     #------------------------------------------------------------------#
-    # TODO: Implement a few more tests of the correlation definition
+    # Implement a few more tests of the correlation definition
+    I1 = plt.imread('../data/t1_demo.tif')
+    I2 = plt.imread('../data/t2_demo.tif')
+    C2= reg.correlation(I1,I1)
+    print('C2:',C2)
+    C3= reg.correlation(I1,I2)
+    print('C3:', C3)
     #------------------------------------------------------------------#
 
     print('Test successful!')
@@ -205,7 +247,12 @@ def mutual_information_test():
     MI1 = reg.mutual_information(p1)
 
     #------------------------------------------------------------------#
-    # TODO: Implement a few tests of the mutual_information definition
+    # Implement a few tests of the mutual_information definition
+    print(MI1)
+    In1=np.random.randint(255, size=(512, 512))
+    In2=np.random.randint(255, size=(512, 512))
+    MI2=reg.mutual_information(reg.joint_histogram(In1,In2))
+    print(MI2)
     #------------------------------------------------------------------#
 
     print('Test successful!')
@@ -222,6 +269,9 @@ def mutual_information_e_test():
     p1 = reg.joint_histogram(I, I)
     MI1 = reg.mutual_information_e(p1)
     MI2 = reg.mutual_information(p1)
+
+    print(abs(MI1-MI2))
+
     assert abs(MI1-MI2) < 10e-3, "Mutual information function with entropy is incorrectly implemented (difference with reference implementation test)"
 
     print('Test successful!')
@@ -237,7 +287,10 @@ def ngradient_test():
     assert abs(g1 - exponential(1)) < 1e-5, "Numerical gradient is incorrectly implemented (exponential test)"
 
     #------------------------------------------------------------------#
-    # TODO: Implement a few more test cases of ngradient
+    # Implement a few more test cases of ngradient
+    deel=lambda x: x/2;
+    g2=reg.ngradient(deel,np.array([1,2,3,4,5]))
+    print(g1,g2)
     #------------------------------------------------------------------#
 
     print('Test successful!')

@@ -44,9 +44,15 @@ def t2h(T, t):
     # Th - homogeneous transformation matrix
 
     #------------------------------------------------------------------#
-    # TODO: Implement conversion of a transformation matrix and a translation vector to homogeneous transformation matrix.
+    # Implement conversion of a transformation matrix and a translation vector to homogeneous transformation matrix.
+    
+    n = np.zeros([1,T.shape[1]])
+    T = np.concatenate((T,n))
+    t = np.append(t,1)
+    Th = np.append(T,t.reshape(np.size(t),1),axis=1)
+    
+    return Th
     #------------------------------------------------------------------#
-
 
 def plot_object(ax, X):
     # Plot 2D object.
@@ -68,7 +74,15 @@ def my_cpselect(I_path, Im_path):
     # Xm - control points in the moving image
 
     #------------------------------------------------------------------#
-    # TODO: Call cpselect and modify the returned point coordinates.
+    # Call cpselect and modify the returned point coordinates.
+    p=cpselect(I_path,Im_path);
+    X=np.zeros([2,len(p)])
+    Xm=np.zeros([2,len(p)])
+    for i in range(len(p)):
+        X[0,i]=p[i]['img1_x']
+        X[1,i]=p[i]['img1_y']
+        Xm[0,i]=p[i]['img2_x']
+        Xm[1,i]=p[i]['img2_y']
     #------------------------------------------------------------------#
 
     return X, Xm
