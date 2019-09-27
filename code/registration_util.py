@@ -56,11 +56,11 @@ def t2h(T, t):
 
 def plot_object(ax, X):
     # Plot 2D object.
-    #
+
     # Input:
     # X - coordinates of the shape
 
-    ax.plot(X[0,:], X[1,:], linewidth=2);
+    ax.plot(X[0,:], X[1,:], linewidth=2)
 
 
 def my_cpselect(I_path, Im_path):
