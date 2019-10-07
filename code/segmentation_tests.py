@@ -38,6 +38,7 @@ def scatter_data_test(showFigs=True):
 
     #------------------------------------------------------------------#
     # TODO: Implement a few test cases of with different features
+
     #------------------------------------------------------------------#
     return X_data, Y
 
